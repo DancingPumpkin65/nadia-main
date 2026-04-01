@@ -1,10 +1,10 @@
-export const snapshotStep = 12;
+export const snapshotStep = 13;
 
 export const stageFeatures = {
   maskModes: true,
   autoDetect: true,
   detectorFallback: true,
-  multiScale: false,
+  multiScale: true,
   manualSelection: false,
   textOverlay: false,
   draggableText: false,
