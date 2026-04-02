@@ -10,8 +10,9 @@ import {
   expandFaceBox,
   rescaleFaceBox,
 } from "./canvas";
-import { snapshotStep, stageFeatures } from "./snapshotStage";
 import type { FaceBox } from "./types";
+
+const detectionScales = [1, 1.25, 1.5, 1.85, 2.2, 0.85];
 
 function useFaceModel() {
   const modelRef = useRef<Promise<blazeface.BlazeFaceModel> | null>(null);
@@ -65,37 +66,8 @@ export function useFaceDetector() {
   const loadMediaPipeDetector = useMediaPipeFaceDetector();
 
   return async (image: HTMLImageElement) => {
-    if (!stageFeatures.autoDetect) {
-      if (snapshotStep === 10) {
-        const width = Math.max(120, image.naturalWidth * 0.22);
-        const height = Math.max(120, image.naturalHeight * 0.22);
-        const x = (image.naturalWidth - width) / 2;
-        const y = image.naturalHeight * 0.18;
-
-        return {
-          faces: [
-            expandFaceBox(
-              { x, y, width, height },
-              image.naturalWidth,
-              image.naturalHeight,
-            ),
-          ],
-          message:
-            "Using a fixed preview mask so you can compare blur and pixelate modes before auto-detection.",
-        };
-      }
-
-      return {
-        faces: [],
-        message: "Image ready. Render to copy it to the browser canvas.",
-      };
-    }
-
     const imageWidth = image.naturalWidth;
     const imageHeight = image.naturalHeight;
-    const detectionScales = stageFeatures.multiScale
-      ? [1, 1.25, 1.5, 1.85, 2.2, 0.85]
-      : [1];
 
     const runBlazeFace = async (input: HTMLImageElement | HTMLCanvasElement) => {
       const model = await loadFaceModel();
@@ -125,10 +97,8 @@ export function useFaceDetector() {
       }
     ).FaceDetector;
 
-    const runNativeFaceDetector = async (
-      input: HTMLImageElement | HTMLCanvasElement,
-    ) => {
-      if (!FaceDetectorCtor || !stageFeatures.detectorFallback) return [];
+    const runNativeFaceDetector = async (input: HTMLImageElement | HTMLCanvasElement) => {
+      if (!FaceDetectorCtor) return [];
 
       const detector = new FaceDetectorCtor({
         fastMode: true,
@@ -155,14 +125,12 @@ export function useFaceDetector() {
             rescaleFaceBox(face, appliedScale, imageWidth, imageHeight),
           );
           const scaleSuffix =
-            appliedScale === 1 || !stageFeatures.multiScale
-              ? "."
-              : " at " + appliedScale.toFixed(2) + "x scale.";
+            appliedScale === 1 ? "" : ` at ${appliedScale.toFixed(2)}x scale`;
           return {
             faces: rawFaces.map((prediction) =>
               expandFaceBox(prediction, imageWidth, imageHeight),
             ),
-            message: "Using " + label + " locally in the browser" + scaleSuffix,
+            message: `Using ${label} locally in the browser${scaleSuffix}.`,
           };
         } catch {
           continue;
@@ -207,9 +175,8 @@ export function useFaceDetector() {
 
     return {
       faces: [],
-      message: stageFeatures.manualSelection
-        ? "No face detected automatically yet. Drag over the face on the original preview to add a manual fallback."
-        : "No face detected automatically yet. Try a clearer image or a closer crop.",
+      message:
+        "No face detected automatically yet. Drag over the face on the original preview to add a manual fallback.",
     };
   };
 }
