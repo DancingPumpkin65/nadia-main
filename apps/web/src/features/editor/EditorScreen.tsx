@@ -24,9 +24,6 @@ export function EditorScreen({ showUserButton = true }: { showUserButton?: boole
           paths={[{ label: "Face Privacy Studio" }]}
           utilitySlot={
             <>
-              <Badge variant="success" className="hidden sm:inline-flex">
-                Browser Editor
-              </Badge>
               <ThemeIconButton theme={theme} onToggle={toggleTheme} />
             </>
           }

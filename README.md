@@ -1,134 +1,102 @@
-# Nadia.
+# Nadia
 
-## Python Face Privacy App
+[![GitHub stars](https://img.shields.io/github/stars/DancingPumpkin65/nadia-main)](https://github.com/DancingPumpkin65/nadia-main/stargazers)
+[![GitHub license](https://img.shields.io/github/license/DancingPumpkin65/nadia-main)](LICENSE.md)
 
-Local Python utilities for hiding faces in images using automatic detection (OpenCV Haar cascade) or manual face boxes.
+Browser-based face privacy editor with reusable auth and design-system building blocks.
 
-## What this app does
+## Interface
 
-- Processes a single image from the command line.
-- Watches a folder and auto-processes new or updated images.
-- Supports two masking modes: `pixelate` and `blur`.
-- Supports manual face regions with `--face-box x,y,w,h`.
+![Interface](docs/demo/interface.png)
 
-## Folder contents
+## Before and After
 
-- `face_privacy.py`: core image loading, face detection, masking, and save logic.
-- `process_image.py`: one-shot CLI to process a single image.
-- `watch_folder.py`: polling watcher that processes images in a folder continuously.
-- `requirements.txt`: Python dependencies.
-- `incoming/`: default input folder for watch mode.
-- `processed/`: default output folder for watch mode.
-- `.deps/` (optional): local dependency bundle; auto-added to `sys.path` when present.
+<table>
+  <tr>
+	<td><strong>Original sample</strong></td>
+	<td><strong>Processed sample</strong></td>
+  </tr>
+  <tr>
+	<td><img src="docs/demo/sample_input.png" alt="Before" /></td>
+	<td><img src="docs/demo/sample_result.png" alt="After" /></td>
+  </tr>
+</table>
 
-## Requirements
+## What the app does
 
-- Python 3.10+ recommended.
-- Pip.
+- Upload an image locally in the browser
+- Detect faces and hide them with blur or pixelation
+- Fall back to manual face selection when auto-detection misses
+- Add an auto-sized text rectangle overlay
+- Keep the Python prototype available separately in `apps/python`
+
+## Repository layout
+
+- `apps/web`: current Bun + Vite + React browser app
+- `apps/python`: original Python face privacy pipeline
+- `archive/static-web`: older static prototype kept aside
+- `docs/samples`: source and output examples
+- `docs/verification`: local verification artifacts
 
 ## Setup
 
-From this directory:
+### Requirements
 
-```bash
-# create and activate a virtual environment
-python -m venv .venv
+- Bun 1.x
+- Node.js 20+ if you want compatibility with non-Bun tooling
+- A Clerk publishable key for the authenticated flow
 
-# Windows PowerShell
-.venv\Scripts\Activate.ps1
-
-# macOS/Linux
-source .venv/bin/activate
-
-# install dependencies
-pip install -r requirements.txt
-```
-
-## Usage
-
-### 1) Process one image
-
-```bash
-python process_image.py --input incoming/photo.jpg --output processed/photo_pixelated.jpg --mode pixelate
-```
-
-Blur mode:
-
-```bash
-python process_image.py --input incoming/photo.jpg --output processed/photo_blurred.jpg --mode blur
-```
-
-Manual face box (repeat flag for multiple faces):
-
-```bash
-python process_image.py \
-	--input incoming/photo.jpg \
-	--output processed/photo_manual.jpg \
-	--mode pixelate \
-	--face-box 120,80,140,160 \
-	--face-box 340,90,120,140
-```
-
-### 2) Watch a folder continuously
-
-```bash
-python watch_folder.py --input-dir incoming --output-dir processed --mode pixelate --interval 2.0
-```
-
-With manual boxes applied to every incoming image:
-
-```bash
-python watch_folder.py \
-	--input-dir incoming \
-	--output-dir processed \
-	--mode blur \
-	--face-box 120,80,140,160
-```
-
-## CLI options
-
-### `process_image.py`
-
-- `--input` (required): source image path.
-- `--output` (required): destination image path.
-- `--mode` (optional): `pixelate` (default) or `blur`.
-- `--face-box` (optional, repeatable): `x,y,w,h` manual region.
-
-### `watch_folder.py`
-
-- `--input-dir` (optional): folder to monitor. Default: `incoming`.
-- `--output-dir` (optional): folder for processed files. Default: `processed`.
-- `--mode` (optional): `pixelate` (default) or `blur`.
-- `--face-box` (optional, repeatable): `x,y,w,h` manual region(s) for each file.
-- `--interval` (optional): polling interval in seconds. Default: `2.0`.
-
-Output filenames in watch mode are generated as:
-
-`<original_name>_<mode><extension>`
-
-Example: `portrait.jpg` -> `portrait_pixelate.jpg`.
-
-## Supported file types
-
-`jpg`, `jpeg`, `png`, `webp`, `bmp`
-
-## Notes and troubleshooting
-
-- If no face is detected, the script raises an error and suggests using `--face-box`.
-- In watch mode, files are skipped when output is newer than input.
-- If activation fails in PowerShell, you may need:
+### Install
 
 ```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+cd apps\web
+bun install
 ```
 
-## Quick start
+### Environment
 
-1. Put an image in `incoming/`.
-2. Run:
+Create `apps/web/.env`:
 
-```bash
-python process_image.py --input incoming/your_image.jpg --output processed/your_image_pixelated.jpg
+```env
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxx
 ```
 
-3. Open the file in `processed/`.
+### Run locally
+
+```powershell
+cd apps\web
+bun run dev
+```
+
+### Production build
+
+```powershell
+cd apps\web
+bun run build
+```
+
+## How to use
+
+1. Upload an image.
+2. Choose `pixelate` or `blur`.
+3. Press `Render`.
+4. If the browser detector misses, place a manual face box on the original preview.
+5. Optionally enable the text overlay and render again.
+
+## Notes and constraints
+
+- Face masking runs client-side in the browser.
+- Detection quality depends on browser support and image difficulty.
+- Manual fallback exists because hard faces are not always detected automatically.
+- The masked region is intentionally degraded. The rest of the image is re-exported from canvas.
+- Metadata from the original file is not preserved in the rendered export.
+
+## Samples
+
+- `docs/demo/sample_input.png`
+- `docs/demo/sample_result.png`
+- `docs/demo/interface.png`
+
+## Development context
+
+This repo was split so the browser product and the original Python tooling can evolve independently while staying in one workspace.

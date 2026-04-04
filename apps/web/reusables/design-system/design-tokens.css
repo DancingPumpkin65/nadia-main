@@ -81,9 +81,9 @@
   --foreground-inverse: #101410;
 
   --border: #e7ede4;
-  --border-subtle: #374038;
-  --shadow-color: #7cb87c;
-  --shadow-accent: #7cb87c;
+  --border-subtle: #e7ede4;
+  --shadow-color: #e7ede4;
+  --shadow-accent: #e7ede4;
 
   --accent: #7cb87c;
   --accent-hover: #91c991;
